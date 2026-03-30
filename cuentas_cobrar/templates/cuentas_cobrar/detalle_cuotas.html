@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Detalle de Cuotas</h2>
+<table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+        <th>Cuota</th>
+        <th>Importe</th>
+        <th>Vence</th>
+        <th>Cobrado</th>
+    </tr>
+    {% for cuota in cuotas %}
+    <tr>
+        <td>{{ cuota.numero }}/{{ credito.cantidad_cuotas }}</td>
+        <td>{{ cuota.importe|floatformat:0 }}</td>
+        <td>{{ cuota.vence|date:'d/m/Y' }}</td>
+        <td>{% if cuota.cobrado %}Sí{% else %}No{% endif %}</td>
+    </tr>
+    {% endfor %}
+</table>
+<a href="{% url 'lista_creditos' %}">Volver a la lista de créditos</a>
+{% endblock %} 

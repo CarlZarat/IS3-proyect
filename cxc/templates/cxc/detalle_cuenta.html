@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="panel mb-4">
+    <div class="panel-head d-flex justify-content-between align-items-center">
+        <h2 class="h3 mb-0">Cuentas a cobrar - Detalle</h2>
+        <a href="{% url 'cxc_lista_cuentas' %}" class="btn btn-modern btn-modern-secondary">Volver al listado</a>
+    </div>
+    <div class="panel-body">
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} mb-2">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="table-responsive mb-4">
+            <table class="table table-modern align-middle">
+                <tr><th>Cliente</th><td>{{ venta.cliente }}</td></tr>
+                <tr><th>Factura</th><td>{{ venta.serie }}-{{ venta.nrofactura }}</td></tr>
+                <tr><th>Fecha</th><td>{{ venta.fechafactura|date:'d/m/Y' }}</td></tr>
+                <tr><th>Moneda</th><td>{{ venta.moneda.moneda }}</td></tr>
+                <tr><th>Cuotas</th><td>{{ venta.plazo.plazo }}</td></tr>
+                <tr><th>Total</th><td>{{ total }}</td></tr>
+                <tr><th>Cobrado</th><td>{{ cobrado_total }}</td></tr>
+                <tr><th>Saldo</th><td>{{ saldo_total }}</td></tr>
+            </table>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-modern align-middle">
+                <thead>
+                    <tr>
+                        <th>Cuota</th>
+                        <th>Importe</th>
+                        <th>Cobrado</th>
+                        <th>Saldo</th>
+                        <th>Vence</th>
+                        <th>Estado</th>
+                        <th>Registrar cobro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cuota in cuotas %}
+                    <tr>
+                        <td>{{ cuota.cuota }}/{{ cuotas|length }}</td>
+                        <td>{{ cuota.importe }}</td>
+                        <td>{{ cuota.cobrado }}</td>
+                        <td>{{ cuota.saldo }}</td>
+                        <td>{{ cuota.vence|date:'d/m/Y' }}</td>
+                        <td>
+                            {% if cuota.estado == 'cobrada' %}
+                            <span class="badge-state state-cobrada">Cobrada</span>
+                            {% elif cuota.estado == 'vencida' %}
+                            <span class="badge-state state-vencida">Vencida</span>
+                            {% elif cuota.estado == 'parcial' %}
+                            <span class="badge-state state-parcial">Parcial</span>
+                            {% else %}
+                            <span class="badge-state state-pendiente">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cuota.saldo > 0 %}
+                            <form method="post" action="{% url 'cxc_registrar_cobro' venta.id cuota.id %}" class="d-flex gap-2 flex-wrap">
+                                {% csrf_token %}
+                                <input type="number" min="1" max="{{ cuota.saldo }}" name="monto" class="form-control form-control-sm" placeholder="Monto" required>
+                                <input type="text" name="referencia" class="form-control form-control-sm" placeholder="Referencia">
+                                <button type="submit" class="btn btn-sm btn-modern btn-modern-primary">Cobrar</button>
+                            </form>
+                            {% else %}
+                            <span class="text-secondary">Sin saldo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

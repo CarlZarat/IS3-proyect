@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="panel mb-4">
+    <div class="panel-head d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="h3 mb-1">Dashboard CXC</h2>
+            <p class="text-secondary mb-0">Resumen operativo de cuentas por cobrar</p>
+        </div>
+        <a href="{% url 'cxc_lista_cuentas' %}" class="btn btn-modern btn-modern-secondary">Ver cuentas</a>
+    </div>
+    <div class="panel-body">
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <div class="panel h-100">
+                    <div class="panel-body">
+                        <div class="text-secondary small">Total cuentas</div>
+                        <div class="fs-3 fw-bold">{{ total_cuentas }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel h-100">
+                    <div class="panel-body">
+                        <div class="text-secondary small">Monto total</div>
+                        <div class="fs-3 fw-bold">{{ monto_total }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel h-100">
+                    <div class="panel-body">
+                        <div class="text-secondary small">Saldo total</div>
+                        <div class="fs-3 fw-bold">{{ monto_saldo_total }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel h-100">
+                    <div class="panel-body">
+                        <div class="text-secondary small">Monto vencido</div>
+                        <div class="fs-3 fw-bold text-danger">{{ monto_vencido }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <h3 class="h5 mb-0">Totales por estado</h3>
+            </div>
+            <div class="panel-body">
+                <div class="row g-3">
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge-state state-pendiente">Pendiente</span>
+                            <span class="fs-5 fw-semibold">{{ totales_estado.pendiente }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge-state state-parcial">Parcial</span>
+                            <span class="fs-5 fw-semibold">{{ totales_estado.parcial }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge-state state-cobrada">Cobrada</span>
+                            <span class="fs-5 fw-semibold">{{ totales_estado.cobrada }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge-state state-vencida">Vencida</span>
+                            <span class="fs-5 fw-semibold">{{ totales_estado.vencida }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GQG System</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{% static 'app.css' %}" rel="stylesheet">
+</head>
+<body class="min-vh-100 app-body">
+    <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-secondary-subtle app-nav mb-4">
+        <div class="container-xl py-2">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-grid-1x2-fill"></i>
+                GQG System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <div class="navbar-nav ms-auto gap-lg-2">
+                    <a href="/cxc/cuentas/" class="nav-link nav-pill">CXC v1</a>
+                    <a href="/cxc/dashboard/" class="nav-link nav-pill">Dashboard CXC</a>
+                    <a href="/clientes/" class="nav-link nav-pill">Clientes</a>
+                    <a href="/facturas/" class="nav-link nav-pill">Facturas</a>
+                    <a href="/ventas/" class="nav-link nav-pill">Ventas</a>
+                    <a href="/cuentas_cobrar/lista/" class="nav-link nav-pill">Créditos y Cuotas</a>
+                    <a href="/cuentas_cobrar/registrar/" class="nav-link nav-pill">Registrar Crédito</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="container-xl pb-5">
+        {% block content %}
+        {% endblock %}
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var selects = document.querySelectorAll('select');
+            selects.forEach(function (select) {
+                var emptyOption = Array.from(select.options).find(function (opt) {
+                    return opt.value === '' && /^-+$/.test((opt.text || '').trim());
+                });
+                if (emptyOption) {
+                    emptyOption.text = 'Seleccionar...';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

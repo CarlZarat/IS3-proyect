@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">CUENTAS A COBRAR</h2>
+<table class="table table-bordered mb-4">
+    <tr><th>Cliente:</th><td>{{ factura.cliente.nombre }}</td></tr>
+    <tr><th>Factura:</th><td>{{ factura.numero }}</td></tr>
+    <tr><th>Fecha:</th><td>{{ factura.fecha }}</td></tr>
+    <tr><th>Moneda:</th><td>{{ factura.moneda }}</td></tr>
+    <!-- Aquí luego irá la fila de cuotas -->
+</table>
+<a href="{% url 'lista_facturas' %}" class="btn btn-secondary">Volver</a>
+{% endblock %} 

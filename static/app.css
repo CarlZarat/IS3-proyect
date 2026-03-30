@@ -1,0 +1,260 @@
+:root {
+  --bg-0: #0b1020;
+  --bg-1: #121a2f;
+  --bg-2: #1a2540;
+  --card: rgba(18, 26, 47, 0.82);
+  --text: #e6edf7;
+  --muted: #a7b4cb;
+  --line: rgba(255, 255, 255, 0.1);
+  --primary: #3b82f6;
+  --primary-strong: #2563eb;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+}
+
+body.app-body {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--text);
+  --bs-body-color: var(--text);
+  --bs-body-bg: transparent;
+  --bs-secondary-color: var(--muted);
+  --bs-border-color: var(--line);
+  --bs-link-color: #9dc2ff;
+  --bs-link-hover-color: #d2e4ff;
+  background:
+    radial-gradient(1200px 500px at 10% -20%, #243b77 0%, transparent 55%),
+    radial-gradient(900px 400px at 100% 0%, #1f5f6f 0%, transparent 50%),
+    linear-gradient(140deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+}
+
+.app-nav {
+  background: rgba(8, 13, 27, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.nav-pill {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem !important;
+  color: var(--muted) !important;
+  transition: all 0.2s ease;
+}
+
+.nav-pill:hover,
+.nav-pill:focus {
+  border-color: var(--line);
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(2, 6, 18, 0.35);
+}
+
+.panel-head {
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 1.2rem;
+}
+
+.panel-body {
+  padding: 1.2rem;
+}
+
+.table-modern {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text);
+  --bs-table-striped-color: var(--text);
+  --bs-table-hover-color: var(--text);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+  --bs-table-border-color: var(--line);
+  margin-bottom: 0;
+}
+
+.table-modern thead th {
+  color: #cdd9ec;
+  font-weight: 600;
+  border-bottom-width: 1px;
+}
+
+.form-control,
+.form-select {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+/* Native select dropdown palette for dark UI */
+.form-select,
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  color-scheme: dark;
+  padding-right: 2.35rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 16 16'%3E%3Cpath fill='%23d8e5ff' d='M3.2 5.5L8 10.3l4.8-4.8 1.2 1.2L8 12.7 2 6.7z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 14px 14px;
+}
+
+select[multiple],
+select[size]:not([size="1"]) {
+  appearance: auto;
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+  background-image: none;
+  padding-right: 0.75rem;
+}
+
+.form-select option,
+select option,
+select optgroup {
+  background-color: #0f1830;
+  color: #e6edf7;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border-color: #5da2ff;
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+
+.form-control::placeholder {
+  color: #91a0bc;
+}
+
+.form-select:disabled,
+.form-control:disabled {
+  background: rgba(255, 255, 255, 0.03);
+  color: #93a4c0;
+}
+
+.btn-modern {
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.btn-modern-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  color: #fff;
+}
+
+.btn-modern-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #d9e4f8;
+  border-color: var(--line);
+}
+
+.badge-state {
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  font-weight: 600;
+}
+
+.state-cobrada { background: rgba(34, 197, 94, 0.2); color: #7ef0a6; }
+.state-vencida { background: rgba(239, 68, 68, 0.2); color: #ff9b9b; }
+.state-parcial { background: rgba(245, 158, 11, 0.2); color: #ffd182; }
+.state-pendiente { background: rgba(148, 163, 184, 0.2); color: #d2dbea; }
+
+.pagination .page-link {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.pagination .page-item.disabled .page-link {
+  background: rgba(255, 255, 255, 0.02);
+  color: #8ea0be;
+}
+
+/* Legacy pages: force readable dark cards/tables without rewriting templates */
+h1, h2, h3, h4, h5, h6 {
+  color: #f4f8ff;
+}
+
+a:not(.btn):not(.nav-link) {
+  color: #9dc2ff;
+}
+
+.btn-link {
+  color: #9dc2ff;
+}
+
+.btn-link:hover,
+.btn-link:focus {
+  color: #d2e4ff;
+}
+
+.btn-primary {
+  border: 0;
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+}
+
+.btn-secondary {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+table {
+  width: 100%;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+table thead th {
+  color: #d7e2f5;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--line);
+}
+
+table th,
+table td {
+  padding: 0.75rem;
+  border-color: var(--line) !important;
+}
+
+table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Override legacy light utility classes used in old templates */
+.bg-white,
+.table,
+.table-striped,
+.table-bordered {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text);
+  --bs-table-striped-color: var(--text);
+  --bs-table-hover-color: var(--text);
+  --bs-table-border-color: var(--line);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
+  color: var(--text) !important;
+  background: var(--card) !important;
+}
+
+.table > :not(caption) > * > *,
+table th,
+table td,
+label,
+.form-label {
+  color: var(--text) !important;
+}
+
+.text-muted,
+.text-secondary {
+  color: var(--muted) !important;
+}

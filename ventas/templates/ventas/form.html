@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel mb-4">
+    <div class="panel-head d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="h3 mb-1">{% if is_edit %}Editar Venta{% else %}Nueva Venta{% endif %}</h2>
+            <p class="text-secondary mb-0">Asocia una factura disponible y define la modalidad de cobro.</p>
+        </div>
+        <a href="{% url 'lista_ventas' %}" class="btn btn-modern btn-modern-secondary">Ver ventas</a>
+    </div>
+    <div class="panel-body">
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} mb-2">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+
+            <div class="col-md-6">
+                <label for="id_factura" class="form-label">Factura</label>
+                {{ form.factura }}
+                {% for error in form.factura.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+                <label for="id_modalidad" class="form-label">Modalidad</label>
+                {{ form.modalidad }}
+                {% for error in form.modalidad.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-12">
+                <label for="id_observacion" class="form-label">Observacion</label>
+                {{ form.observacion }}
+                {% for error in form.observacion.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-12 d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-modern btn-modern-primary">{% if is_edit %}Guardar cambios{% else %}Guardar venta{% endif %}</button>
+                {% if not is_edit %}
+                <a href="{% url 'crear_factura' %}" class="btn btn-modern btn-modern-secondary">Crear factura</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var fields = document.querySelectorAll('input, select, textarea');
+        fields.forEach(function(field) {
+            if (!field.classList.contains('form-control') && !field.classList.contains('form-select')) {
+                if (field.tagName === 'SELECT') {
+                    field.classList.add('form-select');
+                } else {
+                    field.classList.add('form-control');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

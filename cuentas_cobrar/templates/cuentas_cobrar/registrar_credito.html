@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="panel mb-4">
+    <div class="panel-head d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="h3 mb-1">Registrar Credito</h2>
+            <p class="text-secondary mb-0">Define modalidad, cuotas y vencimientos en un solo paso.</p>
+        </div>
+        <a href="{% url 'lista_creditos' %}" class="btn btn-modern btn-modern-secondary">Ver lista</a>
+    </div>
+
+    <div class="panel-body">
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} mb-2">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+
+            <div class="col-md-6">
+                <label for="id_venta" class="form-label">Venta a credito</label>
+                {{ form.venta }}
+                {% for error in form.venta.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+                <label for="id_cliente" class="form-label">Cliente</label>
+                {{ form.cliente }}
+                {% for error in form.cliente.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+                <label for="id_monto" class="form-label">Monto</label>
+                {{ form.monto }}
+                {% for error in form.monto.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+                <label for="id_cantidad_cuotas" class="form-label">Cantidad de cuotas</label>
+                {{ form.cantidad_cuotas }}
+                {% for error in form.cantidad_cuotas.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+                <label for="id_modalidad" class="form-label">Modalidad</label>
+                {{ form.modalidad }}
+                {% for error in form.modalidad.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+                <label for="id_fecha_inicio" class="form-label">Fecha de inicio</label>
+                {{ form.fecha_inicio }}
+                {% for error in form.fecha_inicio.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-12" id="dias-vencimiento-wrapper">
+                <label for="id_dias_vencimiento" class="form-label">Dias de vencimiento por cuota</label>
+                {{ form.dias_vencimiento }}
+                <div class="text-secondary small mt-1">Ejemplo: 30,45,60 (uno por cada cuota)</div>
+                {% for error in form.dias_vencimiento.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-12 d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-modern btn-modern-primary">Registrar credito</button>
+                <a href="{% url 'lista_creditos' %}" class="btn btn-modern btn-modern-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function toggleDiasVencimiento() {
+            var modalidad = document.getElementById('id_modalidad');
+            var diasWrapper = document.getElementById('dias-vencimiento-wrapper');
+            if (!modalidad || !diasWrapper) {
+                return;
+            }
+
+            if (modalidad.value === 'personalizada') {
+                diasWrapper.style.display = '';
+            } else {
+                diasWrapper.style.display = 'none';
+            }
+        }
+
+        var modalidad = document.getElementById('id_modalidad');
+        if (modalidad) {
+            modalidad.addEventListener('change', toggleDiasVencimiento);
+            toggleDiasVencimiento();
+        }
+
+        var fields = document.querySelectorAll('input, select, textarea');
+        fields.forEach(function(field) {
+            if (!field.classList.contains('form-control') && !field.classList.contains('form-select')) {
+                if (field.tagName === 'SELECT') {
+                    field.classList.add('form-select');
+                } else {
+                    field.classList.add('form-control');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 
+

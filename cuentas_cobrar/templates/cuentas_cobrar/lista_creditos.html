@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="panel mb-4">
+    <div class="panel-head d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="h3 mb-1">Lista de Creditos</h2>
+            <p class="text-secondary mb-0">Seguimiento de creditos, cuotas y estado de cobro.</p>
+        </div>
+        <a href="{% url 'registrar_credito' %}" class="btn btn-modern btn-modern-primary">Registrar credito</a>
+    </div>
+    <div class="panel-body">
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} mb-2">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="table-responsive">
+            <table class="table table-modern align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Factura</th>
+                        <th>Monto</th>
+                        <th>Modalidad</th>
+                        <th>Cuotas</th>
+                        <th>Cobradas</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for credito in creditos %}
+                    <tr>
+                        <td>#{{ credito.id }}</td>
+                        <td>{{ credito.cliente.nombre }}</td>
+                        <td>{{ credito.venta.factura.numero }}</td>
+                        <td>{{ credito.monto }}</td>
+                        <td>{{ credito.get_modalidad_display }}</td>
+                        <td>{{ credito.total_cuotas }}</td>
+                        <td>{{ credito.cuotas_cobradas }}</td>
+                        <td>
+                            <a href="{% url 'detalle_cuotas' credito.id %}" class="btn btn-sm btn-modern btn-modern-secondary">Ver cuotas</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <div class="mb-2">No hay creditos registrados todavia.</div>
+                            <a href="{% url 'crear_venta' %}" class="btn btn-sm btn-modern btn-modern-secondary">Crear venta CR</a>
+                            <a href="{% url 'registrar_credito' %}" class="btn btn-sm btn-modern btn-modern-primary">Ir a registrar credito</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 
