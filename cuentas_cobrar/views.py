@@ -51,7 +51,7 @@ def registrar_credito(request):
 
 def lista_creditos(request):
     creditos = (
-        Credito.objects.select_related('cliente', 'venta__factura')
+        Credito.objects.select_related('cliente', 'venta')
         .annotate(
             total_cuotas=Count('cuotas'),
             cuotas_cobradas=Count('cuotas', filter=Q(cuotas__cobrado=True)),

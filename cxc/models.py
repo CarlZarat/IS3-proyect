@@ -108,6 +108,78 @@ class CuentaCobrar(models.Model):
 		return f"{self.venta} cuota {self.cuota}"
 
 
+class Empresa(models.Model):
+	empresa = models.CharField(max_length=200)
+	direccion = models.CharField(max_length=150, blank=True)
+	telefono = models.CharField(max_length=15, blank=True)
+	mail = models.CharField(max_length=50, blank=True)
+	ruc = models.CharField(max_length=50)
+	moneda = models.ForeignKey(Moneda, on_delete=models.PROTECT, db_column='monedaid')
+
+	class Meta:
+		db_table = 'EMPRESAS'
+
+	def __str__(self):
+		return self.empresa
+
+
+class Producto(models.Model):
+	producto = models.CharField(max_length=200)
+	iva = models.DecimalField(max_digits=5, decimal_places=2)
+	servicio = models.BooleanField(default=False)
+
+	class Meta:
+		db_table = 'PRODUCTOS'
+
+	def __str__(self):
+		return self.producto
+
+
+class ProductoDetalle(models.Model):
+	codbarra = models.CharField(max_length=50, primary_key=True)
+	producto = models.ForeignKey(Producto, on_delete=models.CASCADE, db_column='productoid', related_name='detalles')
+	colorid = models.PositiveIntegerField(null=True, blank=True)
+	tamanoid = models.PositiveIntegerField(null=True, blank=True)
+	disenoid = models.PositiveIntegerField(null=True, blank=True)
+	uxb = models.DecimalField(max_digits=18, decimal_places=5, null=True, blank=True)
+
+	class Meta:
+		db_table = 'PRODUCTO_DETALLE'
+
+	def __str__(self):
+		return f"{self.producto.producto} - {self.codbarra}"
+
+
+class PlazoDetalle(models.Model):
+	plazo = models.ForeignKey(Plazo, on_delete=models.CASCADE, related_name='detalles', db_column='plazoid')
+	cuota = models.PositiveIntegerField()
+	dias = models.PositiveIntegerField()
+
+	class Meta:
+		db_table = 'PLAZO_DETALLES'
+
+	def __str__(self):
+		return f"{self.plazo.plazo} - Cuota {self.cuota} ({self.dias} días)"
+
+
+class VentaDetalle(models.Model):
+	venta = models.ForeignKey(Venta, on_delete=models.CASCADE, related_name='detalles', db_column='ventaid')
+	producto_detalle = models.ForeignKey(ProductoDetalle, on_delete=models.PROTECT, db_column='codbarra')
+	precio = models.DecimalField(max_digits=18, decimal_places=5)
+	cantidad = models.DecimalField(max_digits=18, decimal_places=5)
+	iva = models.DecimalField(max_digits=5, decimal_places=2)
+	impuesto5 = models.DecimalField(max_digits=18, decimal_places=5, default=0)
+	impuesto10 = models.DecimalField(max_digits=18, decimal_places=5, default=0)
+	total = models.DecimalField(max_digits=18, decimal_places=5)
+
+	class Meta:
+		db_table = 'VENTA_DETALLES'
+		unique_together = ('venta', 'producto_detalle')
+
+	def __str__(self):
+		return f"Venta {self.venta.id} - {self.producto_detalle.codbarra}"
+
+
 class Cobro(models.Model):
 	cuenta = models.ForeignKey(CuentaCobrar, on_delete=models.CASCADE, related_name='cobros')
 	fecha_pago = models.DateField()

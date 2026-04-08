@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Venta{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Advertencia</h4>
+        <p>Está a punto de eliminar la venta <strong>{{ venta.serie }}-{{ venta.nrofactura }}</strong></p>
+        <hr>
+        <p class="mb-0">Esta acción no se puede deshacer. Se eliminarán todos los detalles asociados a esta venta.</p>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>Venta a Eliminar</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Factura:</strong> {{ venta.serie }}-{{ venta.nrofactura }}</p>
+            <p><strong>Cliente:</strong> {{ venta.cliente.nombre }} {{ venta.cliente.apellido }}</p>
+            <p><strong>Fecha:</strong> {{ venta.fechafactura }}</p>
+            <p><strong>Total:</strong> {{ venta.totalfactura }}</p>
+            <p><strong>Items:</strong> {{ venta.detalles.count }}</p>
+        </div>
+    </div>
+    
+    <div class="mt-4 d-flex gap-2">
+        <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-lg">
+                <i class="bi bi-trash"></i> Sí, Eliminar Venta
+            </button>
+        </form>
+        <a href="{% url 'cxc_detalle_venta' venta.id %}" class="btn btn-secondary btn-lg">
+            <i class="bi bi-x"></i> Cancelar
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ titulo }}</h1>
+    <hr>
+    
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Información de la Venta</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form.cliente }}
+                        {% if form.cliente.errors %}
+                            <small class="text-danger">{{ form.cliente.errors }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.serie }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.nrofactura }}
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        {{ form.fechafactura }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.fechaproce }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.deposito }}
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        {{ form.timbrado }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.timbrado_vence }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.moneda }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.tipo_documento }}
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        {{ form.plazo }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Detalles de Venta (Items)</h5>
+                <small class="text-muted">Agregar los productos vendidos</small>
+            </div>
+            <div class="card-body">
+                {% if formset.non_form_errors %}
+                    <div class="alert alert-danger">
+                        {{ formset.non_form_errors }}
+                    </div>
+                {% endif %}
+                
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>IVA %</th>
+                            <th>Impuesto 5%</th>
+                            <th>Impuesto 10%</th>
+                            <th>Total</th>
+                            <th>Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-tbody">
+                        {{ formset.management_form }}
+                        {% for form in formset.forms %}
+                            <tr class="form-row">
+                                <td>{{ form.producto_detalle }}</td>
+                                <td>{{ form.precio }}</td>
+                                <td>{{ form.cantidad }}</td>
+                                <td>{{ form.iva }}</td>
+                                <td>{{ form.impuesto5 }}</td>
+                                <td>{{ form.impuesto10 }}</td>
+                                <td>{{ form.total }}</td>
+                                <td>{{ form.DELETE }}</td>
+                            </tr>
+                            {% if form.errors %}
+                                <tr>
+                                    <td colspan="8" class="text-danger">
+                                        <small>{{ form.errors }}</small>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Totales</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        {{ form.totalexentas }}
+                        <small class="form-text text-muted">Ventas exentas</small>
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.totalimponible }}
+                        <small class="form-text text-muted">Total imponible</small>
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.totalbase }}
+                        <small class="form-text text-muted">Total base</small>
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.totalfactura }}
+                        <small class="form-text text-muted">Total factura</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-save"></i> Guardar Venta
+            </button>
+            <a href="{% url 'cxc_lista_ventas' %}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control, select {
+        border: 1px solid #ddd;
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+    
+    .table tbody tr {
+        vertical-align: middle;
+    }
+    
+    table input[type="text"],
+    table input[type="number"],
+    table select {
+        width: 100%;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}

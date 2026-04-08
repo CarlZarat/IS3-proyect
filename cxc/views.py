@@ -4,8 +4,10 @@ from django.core.paginator import Paginator
 from django.db.models import Case, CharField, Count, F, Min, Q, Sum, Value, When
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.http import JsonResponse
 
-from .models import Cobro, CuentaCobrar, Venta
+from .models import Cobro, CuentaCobrar, Venta, VentaDetalle
+from .forms import VentaForm, VentaDetalleFormSet
 
 
 def _resumen_cuentas_queryset(cliente_q='', factura_q=''):
@@ -172,3 +174,142 @@ def registrar_cobro(request, venta_id, cuota_id):
 	cuota.save(update_fields=['cobrado'])
 	messages.success(request, 'Cobro registrado correctamente.')
 	return redirect('cxc_detalle_cuenta', venta_id=venta_id)
+
+
+# ==============================================================================
+# NUEVAS VISTAS PARA VENTAS CON DETALLES
+# ==============================================================================
+
+def crear_venta(request):
+	"""Crear una venta con múltiples detalles de items"""
+	if request.method == 'POST':
+		form = VentaForm(request.POST)
+		formset = VentaDetalleFormSet(request.POST)
+		
+		if form.is_valid() and formset.is_valid():
+			venta = form.save()
+			formset.instance = venta
+			formset.save()
+			messages.success(request, f'Venta {venta.nrofactura} creada exitosamente con {venta.detalles.count()} items.')
+			return redirect('cxc_detalle_venta', venta_id=venta.id)
+	else:
+		form = VentaForm()
+		formset = VentaDetalleFormSet()
+	
+	context = {
+		'form': form,
+		'formset': formset,
+		'titulo': 'Crear Nueva Venta',
+	}
+	return render(request, 'cxc/venta_form.html', context)
+
+
+def editar_venta(request, venta_id):
+	"""Editar una venta existente y sus detalles"""
+	venta = get_object_or_404(Venta, id=venta_id)
+	
+	if request.method == 'POST':
+		form = VentaForm(request.POST, instance=venta)
+		formset = VentaDetalleFormSet(request.POST, instance=venta)
+		
+		if form.is_valid() and formset.is_valid():
+			venta = form.save()
+			formset.save()
+			messages.success(request, f'Venta {venta.nrofactura} actualizada exitosamente.')
+			return redirect('cxc_detalle_venta', venta_id=venta.id)
+	else:
+		form = VentaForm(instance=venta)
+		formset = VentaDetalleFormSet(instance=venta)
+	
+	context = {
+		'form': form,
+		'formset': formset,
+		'venta': venta,
+		'titulo': f'Editar Venta {venta.nrofactura}',
+	}
+	return render(request, 'cxc/venta_form.html', context)
+
+
+def detalle_venta(request, venta_id):
+	"""Ver detalles completos de una venta"""
+	venta = get_object_or_404(
+		Venta.objects.select_related('cliente', 'moneda', 'plazo', 'deposito'),
+		id=venta_id
+	)
+	detalles = venta.detalles.select_related('producto_detalle__producto')
+	
+	context = {
+		'venta': venta,
+		'detalles': detalles,
+		'total_items': detalles.count(),
+	}
+	return render(request, 'cxc/detalle_venta_completo.html', context)
+
+
+def lista_ventas(request):
+	"""Listar todas las ventas"""
+	cliente_q = request.GET.get('cliente', '').strip()
+	fecha_desde = request.GET.get('fecha_desde', '').strip()
+	fecha_hasta = request.GET.get('fecha_hasta', '').strip()
+	
+	ventas = Venta.objects.select_related('cliente', 'moneda').all()
+	
+	if cliente_q:
+		ventas = ventas.filter(
+			Q(cliente__nombre__icontains=cliente_q)
+			| Q(cliente__apellido__icontains=cliente_q)
+		)
+	
+	if fecha_desde:
+		ventas = ventas.filter(fechafactura__gte=fecha_desde)
+	
+	if fecha_hasta:
+		ventas = ventas.filter(fechafactura__lte=fecha_hasta)
+	
+	ventas = ventas.order_by('-fechafactura', '-nrofactura')
+	
+	paginator = Paginator(ventas, 20)
+	page_obj = paginator.get_page(request.GET.get('page'))
+	
+	context = {
+		'page_obj': page_obj,
+		'filtros': {
+			'cliente': cliente_q,
+			'fecha_desde': fecha_desde,
+			'fecha_hasta': fecha_hasta,
+		},
+	}
+	return render(request, 'cxc/lista_ventas.html', context)
+
+
+def eliminar_venta(request, venta_id):
+	"""Eliminar una venta y todos sus detalles"""
+	venta = get_object_or_404(Venta, id=venta_id)
+	nrofactura = venta.nrofactura
+	
+	if request.method == 'POST':
+		venta.delete()
+		messages.success(request, f'Venta {nrofactura} eliminada correctamente.')
+		return redirect('cxc_lista_ventas')
+	
+	context = {'venta': venta}
+	return render(request, 'cxc/confirmar_eliminar_venta.html', context)
+
+
+def api_total_venta(request, venta_id):
+	"""API para calcular totales en tiempo real (AJAX)"""
+	venta = get_object_or_404(Venta, id=venta_id)
+	detalles = venta.detalles.all()
+	
+	total_cantidad = sum(d.cantidad for d in detalles)
+	total_base = sum(d.total for d in detalles)
+	total_impuestos = sum(d.impuesto5 + d.impuesto10 for d in detalles)
+	total_general = total_base + total_impuestos
+	
+	return JsonResponse({
+		'cantidad_items': detalles.count(),
+		'total_cantidad': float(total_cantidad),
+		'total_base': float(total_base),
+		'total_impuestos': float(total_impuestos),
+		'total_general': float(total_general),
+	})

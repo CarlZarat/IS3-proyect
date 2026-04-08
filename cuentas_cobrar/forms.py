@@ -1,6 +1,6 @@
 from django import forms
 from .models import Credito
-from ventas.models import Venta
+from cxc.models import Venta
 
 class CreditoForm(forms.ModelForm):
     venta = forms.ModelChoiceField(
@@ -16,11 +16,9 @@ class CreditoForm(forms.ModelForm):
 
     class Meta:
         model = Credito
-        fields = ['venta', 'cliente', 'monto', 'cantidad_cuotas', 'modalidad', 'fecha_inicio'] 
+        fields = ['venta', 'cliente', 'monto', 'cantidad_cuotas', 'modalidad']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['venta'].queryset = Venta.objects.filter(
-            modalidad=Venta.CREDITO,
-            credito__isnull=True,
-        ).select_related('factura')
+        ).select_related('cliente')
