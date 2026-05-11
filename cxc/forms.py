@@ -47,7 +47,9 @@ VentaDetalleFormSet = inlineformset_factory(
     Venta,
     VentaDetalle,
     form=VentaDetalleForm,
-    extra=3,
+    extra=1,
+    min_num=0,
+    validate_min=False,
     can_delete=True
 )
 

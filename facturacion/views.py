@@ -17,13 +17,11 @@ class FacturaForm(forms.ModelForm):
 
     class Meta:
         model = Factura
-        fields = ['cliente', 'numero', 'fecha', 'moneda', 'total']
+        fields = ['cliente', 'fecha', 'moneda', 'total']
         labels = {
-            'numero': 'Número de factura',
             'fecha': 'Fecha de factura',
         }
         help_texts = {
-            'numero': 'Ingresa el número o comprobante de la factura emitida.',
             'fecha': 'Selecciona la fecha de emisión de la factura.',
         }
         widgets = {
