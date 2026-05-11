@@ -4,62 +4,79 @@
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>{{ titulo }}</h1>
-    <hr>
+<div class="container-xl mt-4 sales-form-page">
+    <div class="panel mb-4">
+        <div class="panel-head d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <div>
+                <h1 class="h3 mb-1">{{ titulo }}</h1>
+                <p class="text-secondary mb-0">Completa los datos de la venta y sus items con contraste mejorado para lectura clara.</p>
+            </div>
+        </div>
+        <div class="panel-body">
     
-    <form method="post" class="needs-validation" novalidate>
+    <form method="post" class="needs-validation sales-form" novalidate>
         {% csrf_token %}
         
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header sales-card-header">
                 <h5>Información de la Venta</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body sales-card-body">
                 <div class="row">
                     <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="id_cliente">Cliente</label>
                         {{ form.cliente }}
                         {% if form.cliente.errors %}
-                            <small class="text-danger">{{ form.cliente.errors }}</small>
+                            <small class="text-danger d-block mt-1">{{ form.cliente.errors }}</small>
                         {% endif %}
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_serie">Serie</label>
                         {{ form.serie }}
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_nrofactura">Nro. factura</label>
                         {{ form.nrofactura }}
                     </div>
                 </div>
                 
                 <div class="row mt-3">
                     <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="id_fechafactura">Fecha factura</label>
                         {{ form.fechafactura }}
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="id_fechaproce">Fecha proceso</label>
                         {{ form.fechaproce }}
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="id_deposito">Depósito</label>
                         {{ form.deposito }}
                     </div>
                 </div>
                 
                 <div class="row mt-3">
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_timbrado">Timbrado</label>
                         {{ form.timbrado }}
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_timbrado_vence">Vence timbrado</label>
                         {{ form.timbrado_vence }}
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_moneda">Moneda</label>
                         {{ form.moneda }}
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_tipo_documento">Tipo documento</label>
                         {{ form.tipo_documento }}
                     </div>
                 </div>
                 
                 <div class="row mt-3">
                     <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="id_plazo">Plazo</label>
                         {{ form.plazo }}
                     </div>
                 </div>
@@ -67,19 +84,20 @@
         </div>
         
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header sales-card-header">
                 <h5>Detalles de Venta (Items)</h5>
-                <small class="text-muted">Agregar los productos vendidos</small>
+                <small class="text-secondary">Agregar los productos vendidos</small>
             </div>
-            <div class="card-body">
+            <div class="card-body sales-card-body">
                 {% if formset.non_form_errors %}
                     <div class="alert alert-danger">
                         {{ formset.non_form_errors }}
                     </div>
                 {% endif %}
                 
-                <table class="table table-sm table-bordered">
-                    <thead class="table-light">
+                <div class="table-responsive sales-items-table">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead>
                         <tr>
                             <th>Producto</th>
                             <th>Precio</th>
@@ -114,30 +132,35 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
         
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header sales-card-header">
                 <h5>Totales</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body sales-card-body">
                 <div class="row">
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_totalexentas">Total exentas</label>
                         {{ form.totalexentas }}
-                        <small class="form-text text-muted">Ventas exentas</small>
+                        <small class="form-text text-secondary">Ventas exentas</small>
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_totalimponible">Total imponible</label>
                         {{ form.totalimponible }}
-                        <small class="form-text text-muted">Total imponible</small>
+                        <small class="form-text text-secondary">Total imponible</small>
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_totalbase">Total base</label>
                         {{ form.totalbase }}
-                        <small class="form-text text-muted">Total base</small>
+                        <small class="form-text text-secondary">Total base</small>
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="id_totalfactura">Total factura</label>
                         {{ form.totalfactura }}
-                        <small class="form-text text-muted">Total factura</small>
+                        <small class="form-text text-secondary">Total factura</small>
                     </div>
                 </div>
             </div>
@@ -152,25 +175,75 @@
             </a>
         </div>
     </form>
+        </div>
+    </div>
 </div>
 
 <style>
-    .form-control, select {
-        border: 1px solid #ddd;
-        font-size: 0.9rem;
-        padding: 0.5rem;
+    .sales-form-page .panel-body {
+        padding-top: 0.5rem;
+    }
+
+    .sales-card-header {
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sales-card-body {
+        background: rgba(9, 14, 28, 0.92);
+    }
+
+    .sales-form .form-control,
+    .sales-form .form-select,
+    .sales-form select,
+    .sales-form input {
+        min-height: 42px;
+        font-size: 0.95rem;
+        color: #f4f8ff;
+        background-color: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .sales-form .form-control::placeholder,
+    .sales-form input::placeholder {
+        color: #a9b7d0;
+    }
+
+    .sales-items-table thead th {
+        background: rgba(255, 255, 255, 0.08);
+        color: #f2f6ff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        white-space: nowrap;
     }
     
     .table tbody tr {
         vertical-align: middle;
     }
     
-    table input[type="text"],
-    table input[type="number"],
-    table select {
+    .sales-items-table table input[type="text"],
+    .sales-items-table table input[type="number"],
+    .sales-items-table table select {
         width: 100%;
-        padding: 0.25rem 0.5rem;
-        font-size: 0.85rem;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .sales-items-table td,
+    .sales-items-table th {
+        background: rgba(255, 255, 255, 0.02);
+        color: #f4f8ff;
+    }
+
+    .sales-items-table .form-check-input {
+        width: 1rem;
+        height: 1rem;
+        margin-top: 0.3rem;
+        accent-color: #5da2ff;
+    }
+
+    .sales-form .alert-danger,
+    .sales-form .text-danger {
+        color: #ff9b9b !important;
     }
 </style>
 {% endblock %}

@@ -4,6 +4,11 @@
 <form method="post" class="space-y-4">
     {% csrf_token %}
     {{ form.as_p }}
+    <datalist id="clientes-list">
+        {% for cliente in clientes %}
+        <option value="{{ cliente.nombre }}{% if cliente.ruc %} - {{ cliente.ruc }}{% endif %}"></option>
+        {% endfor %}
+    </datalist>
     <button type="submit">Guardar</button>
 </form>
 {% endblock %}

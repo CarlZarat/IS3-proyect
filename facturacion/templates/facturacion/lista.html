@@ -19,7 +19,7 @@
             <td>{{ factura.numero }}</td>
             <td>{{ factura.cliente.nombre }}</td>
             <td>{{ factura.fecha }}</td>
-            <td>{{ factura.moneda }}</td>
+            <td>{{ factura.get_moneda_display }}</td>
             <td>{{ factura.total }}</td>
             <td>
                 <a href="{% url 'detalle_cuenta' factura.id %}" class="btn btn-link">Ver Detalle</a>

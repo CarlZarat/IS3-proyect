@@ -1,27 +1,26 @@
-from django.shortcuts import get_object_or_404, render, redirect
-from cxc.models import Venta
-from django import forms
-from django.contrib import messages
-from django.db.models import Q
+from cxc import views as cxc_views
 
-
-class VentaForm(forms.ModelForm):
-    """Formulario simplificado - usar cxc.forms.VentaForm para lo completo"""
-    class Meta:
-        model = Venta
-        fields = ['cliente', 'serie', 'nrofactura', 'fechafactura', 'plazo']
 
 def lista_ventas(request):
-    """Listar ventas - REDIRIGIR a cxc/ventas/"""
-    messages.info(request, 'Las ventas ahora se manejan en CXC. Redirigiendo...')
-    return redirect('cxc_lista_ventas')
+    """Alias funcional de /ventas/ hacia la implementación actual en CxC."""
+    return cxc_views.lista_ventas(request)
+
 
 def crear_venta(request):
-    """Crear venta - REDIRIGIR a cxc/ventas/nueva/"""
-    messages.info(request, 'Las ventas ahora se manejan en CXC. Redirigiendo...')
-    return redirect('cxc_crear_venta')
+    """Alias funcional de /ventas/nuevo/ hacia la implementación actual en CxC."""
+    return cxc_views.crear_venta(request)
+
+
+def detalle_venta(request, venta_id):
+    """Alias funcional de /ventas/<id>/ hacia la implementación actual en CxC."""
+    return cxc_views.detalle_venta(request, venta_id=venta_id)
+
 
 def editar_venta(request, venta_id):
-    """Editar venta - REDIRIGIR a cxc/ventas/<id>/editar/"""
-    messages.info(request, 'Las ventas ahora se manejan en CXC. Redirigiendo...')
-    return redirect('cxc_editar_venta', venta_id=venta_id)
+    """Alias funcional de /ventas/<id>/editar/ hacia la implementación actual en CxC."""
+    return cxc_views.editar_venta(request, venta_id=venta_id)
+
+
+def eliminar_venta(request, venta_id):
+    """Alias funcional de /ventas/<id>/eliminar/ hacia la implementación actual en CxC."""
+    return cxc_views.eliminar_venta(request, venta_id=venta_id)
