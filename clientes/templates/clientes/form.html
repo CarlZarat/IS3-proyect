@@ -1,9 +1,112 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 class="btn btn-secondary mb-3">Nuevo Cliente</h2>
-<form method="post" class="space-y-4">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Guardar</button>
-</form>
+<style>
+    .cliente-form-wrap {
+        max-width: 860px;
+        margin: 0 auto;
+    }
+    .cliente-form-card {
+        border: 0;
+        border-radius: 20px;
+        background: linear-gradient(140deg, #0f4c81 0%, #2a6f97 45%, #5fa8d3 100%);
+        box-shadow: 0 18px 50px rgba(15, 76, 129, 0.28);
+        overflow: hidden;
+    }
+    .cliente-form-card .card-header {
+        border-bottom: 0;
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+    .cliente-form-title {
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        letter-spacing: 0.2px;
+    }
+    .cliente-form-card .card-body {
+        background: #f7fbff;
+    }
+    .cliente-form-intro {
+        color: #1f4865;
+        font-weight: 500;
+    }
+    .required-asterisk {
+        color: #dc3545;
+        font-weight: 700;
+        margin-left: 4px;
+    }
+    .field-label {
+        font-weight: 700;
+        color: #0f3550;
+    }
+    .cliente-form-card label.form-label,
+    .cliente-form-card .field-label {
+        color: #0f3550 !important;
+    }
+    .cliente-form-card .form-control {
+        color: #16364d;
+        border: 1px solid #99bdd5;
+        background-color: #ffffff;
+    }
+    .cliente-form-card .form-control::placeholder {
+        color: #6a879b;
+        opacity: 1;
+    }
+    .cliente-form-card .form-control:focus {
+        border-color: #2a6f97;
+        box-shadow: 0 0 0 0.2rem rgba(42, 111, 151, 0.2);
+    }
+    .btn-gradient-primary {
+        color: #fff;
+        border: 0;
+        background: linear-gradient(120deg, #0f4c81, #1d6fa5);
+    }
+    .btn-gradient-primary:hover {
+        color: #fff;
+        background: linear-gradient(120deg, #0d426f, #165b87);
+    }
+    .btn-soft {
+        border: 1px solid #8fb9d3;
+        color: #1f4865;
+        background: #eaf4fb;
+    }
+</style>
+
+<div class="cliente-form-wrap">
+    <div class="card cliente-form-card">
+        <div class="card-header py-3 px-4">
+            <h2 class="h4 mb-0 cliente-form-title">{{ titulo|default:'Nuevo Cliente' }}</h2>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            <p class="cliente-form-intro mb-4">Completa los datos del cliente. Los campos con <span class="required-asterisk">*</span> son obligatorios.</p>
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    {% for field in form %}
+                    <div class="col-12 {% if field.name == 'direccion' %}col-md-12{% else %}col-md-6{% endif %}">
+                        <label for="{{ field.id_for_label }}" class="form-label field-label">
+                            {{ field.label }}{% if field.field.required %}<span class="required-asterisk">*</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-gradient-primary px-4">Guardar cliente</button>
+                    <a href="{% url 'lista_clientes' %}" class="btn btn-soft px-4">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
