@@ -70,3 +70,11 @@ def dar_baja_cliente(request, cliente_id):
         cliente.activo = False
         cliente.save(update_fields=['activo'])
     return redirect('lista_clientes')
+
+
+def reactivar_cliente(request, cliente_id):
+    if request.method == 'POST':
+        cliente = get_object_or_404(Cliente, id=cliente_id)
+        cliente.activo = True
+        cliente.save(update_fields=['activo'])
+    return redirect('lista_clientes')

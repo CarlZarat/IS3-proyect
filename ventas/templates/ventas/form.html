@@ -1,64 +1,134 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="panel mb-4">
-    <div class="panel-head d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="h3 mb-1">{% if is_edit %}Editar Venta{% else %}Nueva Venta{% endif %}</h2>
-            <p class="text-secondary mb-0">Asocia una factura disponible y define la modalidad de cobro.</p>
-        </div>
-        <a href="{% url 'lista_ventas' %}" class="btn btn-modern btn-modern-secondary">Ver ventas</a>
-    </div>
-    <div class="panel-body">
-        {% if messages %}
-        <div class="mb-3">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} mb-2">{{ message }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
+<style>
+    .form-wrap {
+        max-width: 860px;
+        margin: 0 auto;
+    }
+    .form-card {
+        border: 0;
+        border-radius: 20px;
+        background: linear-gradient(140deg, #0f4c81 0%, #2a6f97 45%, #5fa8d3 100%);
+        box-shadow: 0 18px 50px rgba(15, 76, 129, 0.28);
+        overflow: hidden;
+    }
+    .form-card .card-header {
+        border-bottom: 0;
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+    .form-title {
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        letter-spacing: 0.2px;
+    }
+    .form-card .card-body {
+        background: #f7fbff;
+    }
+    .form-intro {
+        color: #1f4865;
+        font-weight: 500;
+    }
+    .form-card label.form-label,
+    .form-card .field-label {
+        font-weight: 700;
+        color: #0f3550 !important;
+    }
+    .form-card .form-control {
+        color: #16364d;
+        border: 1px solid #99bdd5;
+        background-color: #ffffff;
+    }
+    .form-card .form-select {
+        color: #16364d;
+        border: 1px solid #99bdd5;
+        background-color: #ffffff;
+    }
+    .form-card .form-control::placeholder {
+        color: #6a879b;
+        opacity: 1;
+    }
+    .form-card .form-control:focus,
+    .form-card .form-select:focus {
+        border-color: #2a6f97;
+        box-shadow: 0 0 0 0.2rem rgba(42, 111, 151, 0.2);
+    }
+    .btn-gradient-primary {
+        color: #fff;
+        border: 0;
+        background: linear-gradient(120deg, #0f4c81, #1d6fa5);
+    }
+    .btn-gradient-primary:hover {
+        color: #fff;
+        background: linear-gradient(120deg, #0d426f, #165b87);
+    }
+    .btn-soft {
+        border: 1px solid #8fb9d3;
+        color: #1f4865;
+        background: #eaf4fb;
+    }
+</style>
 
-        {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-            {% for error in form.non_field_errors %}
-            <div>{{ error }}</div>
-            {% endfor %}
+<div class="form-wrap">
+    <div class="card form-card">
+        <div class="card-header py-3 px-4">
+            <h2 class="h4 mb-0 form-title">{% if is_edit %}Editar Venta{% else %}Nueva Venta{% endif %}</h2>
         </div>
-        {% endif %}
-
-        <form method="post" class="row g-3">
-            {% csrf_token %}
-
-            <div class="col-md-6">
-                <label for="id_factura" class="form-label">Factura</label>
-                {{ form.factura }}
-                {% for error in form.factura.errors %}
-                <div class="text-danger small mt-1">{{ error }}</div>
+        <div class="card-body p-4 p-md-5">
+            <p class="form-intro mb-4">{% if is_edit %}Actualiza los datos de la venta.{% else %}Asocia una factura disponible y define la modalidad de cobro.{% endif %}</p>
+            
+            {% if messages %}
+            <div class="mb-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} mb-2">{{ message }}</div>
                 {% endfor %}
             </div>
+            {% endif %}
 
-            <div class="col-md-6">
-                <label for="id_modalidad" class="form-label">Modalidad</label>
-                {{ form.modalidad }}
-                {% for error in form.modalidad.errors %}
-                <div class="text-danger small mt-1">{{ error }}</div>
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
                 {% endfor %}
             </div>
+            {% endif %}
 
-            <div class="col-12">
-                <label for="id_observacion" class="form-label">Observacion</label>
-                {{ form.observacion }}
-                {% for error in form.observacion.errors %}
-                <div class="text-danger small mt-1">{{ error }}</div>
-                {% endfor %}
-            </div>
+            <form method="post" class="row g-3" novalidate>
+                {% csrf_token %}
 
-            <div class="col-12 d-flex gap-2 mt-3">
-                <button type="submit" class="btn btn-modern btn-modern-primary">{% if is_edit %}Guardar cambios{% else %}Guardar venta{% endif %}</button>
-                {% if not is_edit %}
-                <a href="{% url 'crear_factura' %}" class="btn btn-modern btn-modern-secondary">Crear factura</a>
-                {% endif %}
-            </div>
-        </form>
+                <div class="col-md-6">
+                    <label for="id_factura" class="form-label field-label">Factura</label>
+                    {{ form.factura }}
+                    {% for error in form.factura.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-6">
+                    <label for="id_modalidad" class="form-label field-label">Modalidad</label>
+                    {{ form.modalidad }}
+                    {% for error in form.modalidad.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-12">
+                    <label for="id_observacion" class="form-label field-label">Observación</label>
+                    {{ form.observacion }}
+                    {% for error in form.observacion.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-12 d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-gradient-primary px-4">{% if is_edit %}Guardar cambios{% else %}Guardar venta{% endif %}</button>
+                    {% if not is_edit %}
+                    <a href="{% url 'crear_factura' %}" class="btn btn-soft px-4">Crear factura</a>
+                    {% endif %}
+                    <a href="{% url 'lista_ventas' %}" class="btn btn-soft px-4">Cancelar</a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

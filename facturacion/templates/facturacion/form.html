@@ -1,14 +1,121 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 class="text-2xl font-bold mb-4">Nueva Factura</h2>
-<form method="post" class="space-y-4">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <datalist id="clientes-list">
-        {% for cliente in clientes %}
-        <option value="{{ cliente.nombre }}{% if cliente.ruc %} - {{ cliente.ruc }}{% endif %}"></option>
-        {% endfor %}
-    </datalist>
-    <button type="submit">Guardar</button>
-</form>
+<style>
+    .factura-form-wrap {
+        max-width: 860px;
+        margin: 0 auto;
+    }
+    .factura-form-card {
+        border: 0;
+        border-radius: 20px;
+        background: linear-gradient(140deg, #0f4c81 0%, #2a6f97 45%, #5fa8d3 100%);
+        box-shadow: 0 18px 50px rgba(15, 76, 129, 0.28);
+        overflow: hidden;
+    }
+    .factura-form-card .card-header {
+        border-bottom: 0;
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+    .factura-form-title {
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        letter-spacing: 0.2px;
+    }
+    .factura-form-card .card-body {
+        background: #f7fbff;
+    }
+    .factura-form-intro {
+        color: #1f4865;
+        font-weight: 500;
+    }
+    .factura-form-card label.form-label,
+    .factura-form-card .field-label {
+        font-weight: 700;
+        color: #0f3550 !important;
+    }
+    .factura-form-card .form-control {
+        color: #16364d;
+        border: 1px solid #99bdd5;
+        background-color: #ffffff;
+    }
+    .factura-form-card .form-select {
+        color: #16364d;
+        border: 1px solid #99bdd5;
+        background-color: #ffffff;
+    }
+    .factura-form-card .form-control::placeholder {
+        color: #6a879b;
+        opacity: 1;
+    }
+    .factura-form-card .form-control:focus,
+    .factura-form-card .form-select:focus {
+        border-color: #2a6f97;
+        box-shadow: 0 0 0 0.2rem rgba(42, 111, 151, 0.2);
+    }
+    .btn-gradient-primary {
+        color: #fff;
+        border: 0;
+        background: linear-gradient(120deg, #0f4c81, #1d6fa5);
+    }
+    .btn-gradient-primary:hover {
+        color: #fff;
+        background: linear-gradient(120deg, #0d426f, #165b87);
+    }
+    .btn-soft {
+        border: 1px solid #8fb9d3;
+        color: #1f4865;
+        background: #eaf4fb;
+    }
+    .required-asterisk {
+        color: #dc3545;
+        font-weight: 700;
+        margin-left: 4px;
+    }
+</style>
+
+<div class="factura-form-wrap">
+    <div class="card factura-form-card">
+        <div class="card-header py-3 px-4">
+            <h2 class="h4 mb-0 factura-form-title">Nueva Factura</h2>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            <p class="factura-form-intro mb-4">Completa los datos de la factura. Los campos con <span class="required-asterisk">*</span> son obligatorios.</p>
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    {% for field in form %}
+                    <div class="col-12 {% if field.name in 'fecha,moneda,total' %}col-md-6{% else %}col-md-12{% endif %}">
+                        <label for="{{ field.id_for_label }}" class="form-label field-label">
+                            {{ field.label }}{% if field.field.required %}<span class="required-asterisk">*</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <datalist id="clientes-list">
+                    {% for cliente in clientes %}
+                    <option value="{{ cliente.nombre }}{% if cliente.ruc %} - {{ cliente.ruc }}{% endif %}"></option>
+                    {% endfor %}
+                </datalist>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-gradient-primary px-4">Guardar factura</button>
+                    <a href="{% url 'lista_facturas' %}" class="btn btn-soft px-4">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
