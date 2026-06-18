@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Moneda, Cliente, Deposito, TipoDocumento, Plazo, PlazoDetalle,
+    Moneda, Cliente, Deposito, TipoDocumento, Timbrado, Plazo, PlazoDetalle,
     Empresa, Producto, ProductoDetalle, Venta, VentaDetalle,
     CuentaCobrar, Cobro
 )
@@ -9,7 +9,7 @@ from .models import (
 class VentaDetalleInline(admin.TabularInline):
     model = VentaDetalle
     extra = 1
-    fields = ['producto_detalle', 'precio', 'cantidad', 'iva', 'impuesto5', 'impuesto10', 'total']
+    fields = ['producto_detalle', 'precio', 'cantidad', 'impuesto10', 'total']
 
 class VentaAdmin(admin.ModelAdmin):
     list_display = ['id', 'nrofactura', 'cliente', 'fechafactura', 'totalfactura', 'plazo']
@@ -24,7 +24,7 @@ class ProductoDetalleInline(admin.TabularInline):
     fields = ['codbarra', 'colorid', 'tamanoid', 'disenoid', 'uxb']
 
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ['id', 'producto', 'iva', 'servicio']
+    list_display = ['id', 'producto', 'iva', 'precio_venta', 'servicio']
     list_filter = ['servicio', 'iva']
     search_fields = ['producto']
     inlines = [ProductoDetalleInline]
@@ -40,6 +40,11 @@ class PlazoAdmin(admin.ModelAdmin):
     search_fields = ['plazo']
     inlines = [PlazoDetalleInline]
 
+class TimbradoAdmin(admin.ModelAdmin):
+    list_display = ['id', 'numero', 'serie', 'nro_inicio', 'nro_fin', 'fecha_vencimiento', 'estado']
+    list_filter = ['estado', 'fecha_vencimiento']
+    search_fields = ['numero', 'serie']
+
 class CuentaCobrarAdmin(admin.ModelAdmin):
     list_display = ['id', 'venta', 'cuota', 'importe', 'vence', 'cobrado']
     list_filter = ['vence', 'cobrado']
@@ -51,6 +56,7 @@ admin.site.register(Cliente)
 admin.site.register(Deposito)
 admin.site.register(TipoDocumento)
 admin.site.register(Plazo, PlazoAdmin)
+admin.site.register(Timbrado, TimbradoAdmin)
 admin.site.register(Empresa)
 admin.site.register(Producto, ProductoAdmin)
 admin.site.register(Venta, VentaAdmin)

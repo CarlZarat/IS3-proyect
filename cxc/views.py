@@ -1,13 +1,162 @@
-from datetime import date
+from datetime import date, timedelta
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.core.paginator import Paginator
-from django.db.models import Case, CharField, Count, F, Min, Q, Sum, Value, When
+from django.db import transaction
+from django.db.models import Case, CharField, Count, F, Max, Min, Q, Sum, Value, When
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
+from django.utils import timezone
 
-from .models import Cobro, CuentaCobrar, Venta, VentaDetalle
+from .models import Cobro, CuentaCobrar, Deposito, Plazo, ProductoDetalle, Timbrado, Venta, VentaDetalle
 from .forms import VentaForm, VentaDetalleFormSet
+
+
+def _default_sale_values():
+	hoy = timezone.localdate()
+	timbrado_registro = Timbrado.objects.filter(estado=Timbrado.ESTADO_VIGENTE).order_by('fecha_vencimiento', 'serie').first()
+	serie = timbrado_registro.serie if timbrado_registro else '001-001'
+	timbrado = timbrado_registro.numero if timbrado_registro else '12345678'
+	timbrado_vence = timbrado_registro.fecha_vencimiento if timbrado_registro else hoy + timedelta(days=365)
+	return {
+		'fechafactura': hoy,
+		'serie': serie,
+		'nrofactura': _next_nrofactura(timbrado_registro),
+		'timbrado': timbrado,
+		'timbrado_vence': timbrado_vence,
+		'timbrado_registro': timbrado_registro,
+	}
+
+
+def _plazo_catalog():
+	return [
+		{
+			'id': plazo.id,
+			'label': plazo.plazo,
+			'irregular': plazo.irregular,
+			'cuotas': plazo.cuotas,
+		}
+		for plazo in Plazo.objects.order_by('plazo')
+	]
+
+
+def _timbrado_catalog():
+	return [
+		{
+			'id': timbrado.id,
+			'label': f'{timbrado.numero} - {timbrado.serie}',
+			'numero': timbrado.numero,
+			'serie': timbrado.serie,
+			'fecha_vencimiento': timbrado.fecha_vencimiento.isoformat(),
+		}
+		for timbrado in Timbrado.objects.filter(estado=Timbrado.ESTADO_VIGENTE).order_by('fecha_vencimiento', 'serie')
+	]
+
+
+def _product_catalog():
+	return [
+		{
+			'id': detalle.pk,
+			'label': f'{detalle.producto.producto} - {detalle.codbarra}',
+			'iva': float(detalle.producto.iva),
+			'precio': float(detalle.producto.precio_venta),
+		}
+		for detalle in ProductoDetalle.objects.select_related('producto').order_by('producto__producto', 'codbarra')
+	]
+
+
+def _next_nrofactura(timbrado_registro_or_serie):
+	if hasattr(timbrado_registro_or_serie, 'nro_inicio'):
+		timbrado_registro = timbrado_registro_or_serie
+		ultimo_moderno = Venta.objects.filter(timbrado_registro=timbrado_registro).aggregate(maximo=Max('nrofactura'))['maximo']
+		ultimo_legacy = Venta.objects.filter(serie=timbrado_registro.serie, timbrado=timbrado_registro.numero).aggregate(maximo=Max('nrofactura'))['maximo']
+		ultimo = max([valor for valor in [ultimo_moderno, ultimo_legacy] if valor is not None], default=0)
+		return max(ultimo + 1, timbrado_registro.nro_inicio)
+	ultimo = Venta.objects.filter(serie=timbrado_registro_or_serie).aggregate(maximo=Max('nrofactura'))['maximo']
+	return (ultimo or 0) + 1
+
+
+def _first_deposito():
+	return Deposito.objects.order_by('id').first()
+
+
+def _calcular_detalle(form):
+	detalle = form.save(commit=False)
+	precio = Decimal(str(form.cleaned_data['precio'] or 0))
+	cantidad = Decimal(str(form.cleaned_data['cantidad'] or 0))
+	iva = Decimal(str(detalle.producto_detalle.producto.iva or 0))
+	total = (precio * cantidad).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
+
+	if iva == Decimal('5'):
+		base = (total / Decimal('1.05')).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
+		impuesto5 = (total - base).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
+		impuesto10 = Decimal('0')
+		total_exentas = 0
+		total_imponible = int(base.to_integral_value(rounding=ROUND_HALF_UP))
+	elif iva == Decimal('10'):
+		base = (total / Decimal('1.10')).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
+		impuesto5 = Decimal('0')
+		impuesto10 = (total - base).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
+		total_exentas = 0
+		total_imponible = int(base.to_integral_value(rounding=ROUND_HALF_UP))
+	else:
+		base = total
+		impuesto5 = Decimal('0')
+		impuesto10 = Decimal('0')
+		total_exentas = int(total.to_integral_value(rounding=ROUND_HALF_UP))
+		total_imponible = 0
+
+	detalle.iva = iva
+	detalle.precio = precio
+	detalle.cantidad = cantidad
+	detalle.impuesto5 = impuesto5
+	detalle.impuesto10 = impuesto10
+	detalle.total = total
+	return detalle, total_exentas, total_imponible, int(total.to_integral_value(rounding=ROUND_HALF_UP))
+
+
+def _generar_cuentas_cobrar(venta, total_factura, cleaned_data):
+	if venta.plazo.plazo.upper() == 'CO':
+		CuentaCobrar.objects.create(
+			tabla='VENTAS',
+			venta=venta,
+			cuota=1,
+			importe=total_factura,
+			cobrado=total_factura,
+			vence=venta.fechafactura,
+		)
+		return
+
+	cantidad_cuotas = int(cleaned_data['cantidad_cuotas'])
+	tipo_vencimiento = cleaned_data['tipo_vencimiento']
+	base, resto = divmod(total_factura, cantidad_cuotas)
+
+	if tipo_vencimiento == 'irregular':
+		dias_lista = [int(d.strip()) for d in (cleaned_data.get('dias_irregulares') or '').split(',') if d.strip()]
+		for indice, dias in enumerate(dias_lista):
+			importe = base + (1 if indice < resto else 0)
+			CuentaCobrar.objects.create(
+				tabla='VENTAS',
+				venta=venta,
+				cuota=indice + 1,
+				importe=importe,
+				cobrado=0,
+				vence=venta.fechafactura + timedelta(days=dias),
+			)
+		return
+
+	dias_entre_cuotas = int(cleaned_data['dias_entre_cuotas'])
+	for indice in range(cantidad_cuotas):
+		importe = base + (1 if indice < resto else 0)
+		CuentaCobrar.objects.create(
+			tabla='VENTAS',
+			venta=venta,
+			cuota=indice + 1,
+			importe=importe,
+			cobrado=0,
+			vence=venta.fechafactura + timedelta(days=dias_entre_cuotas * (indice + 1)),
+		)
 
 
 def _resumen_cuentas_queryset(cliente_q='', factura_q=''):
@@ -182,24 +331,79 @@ def registrar_cobro(request, venta_id, cuota_id):
 
 def crear_venta(request):
 	"""Crear una venta con múltiples detalles de items"""
+	sale_defaults = _default_sale_values()
 	if request.method == 'POST':
-		form = VentaForm(request.POST)
+		form = VentaForm(request.POST, sale_defaults=sale_defaults)
 		formset = VentaDetalleFormSet(request.POST)
 		
 		if form.is_valid() and formset.is_valid():
-			venta = form.save()
-			formset.instance = venta
-			formset.save()
-			messages.success(request, f'Venta {venta.nrofactura} creada exitosamente con {venta.detalles.count()} items.')
-			return redirect('cxc_detalle_venta', venta_id=venta.id)
+			venta_creada = None
+			with transaction.atomic():
+				venta = form.save(commit=False)
+				venta.fechaproce = timezone.now()
+				venta.deposito = _first_deposito()
+				if not venta.deposito:
+					form.add_error(None, 'No hay depósitos disponibles para asignar a la venta.')
+				elif not form.cleaned_data.get('timbrado_registro'):
+					form.add_error('timbrado_registro', 'Debes seleccionar un timbrado vigente.')
+				else:
+					timbrado_registro = form.cleaned_data['timbrado_registro']
+					venta.timbrado_registro = timbrado_registro
+					venta.serie = timbrado_registro.serie
+					venta.nrofactura = _next_nrofactura(timbrado_registro)
+					if venta.nrofactura > timbrado_registro.nro_fin:
+						form.add_error('nrofactura', f'El timbrado {timbrado_registro.numero} no tiene más números disponibles.')
+					else:
+						venta.timbrado = timbrado_registro.numero
+						venta.timbrado_vence = timbrado_registro.fecha_vencimiento
+
+						detalles = []
+						total_exentas = 0
+						total_imponible = 0
+						total_factura = 0
+
+						for detalle_form in formset.forms:
+							if not hasattr(detalle_form, 'cleaned_data'):
+								continue
+							if detalle_form.cleaned_data.get('DELETE'):
+								continue
+							if not detalle_form.cleaned_data or not detalle_form.cleaned_data.get('producto_detalle'):
+								continue
+							detalle, exentas, imponible, factura = _calcular_detalle(detalle_form)
+							detalles.append(detalle)
+							total_exentas += exentas
+							total_imponible += imponible
+							total_factura += factura
+
+						if not detalles:
+							form.add_error(None, 'Debes agregar al menos un item a la venta.')
+						else:
+							venta.totalexentas = total_exentas
+							venta.totalimponible = total_imponible
+							venta.totalbase = total_imponible
+							venta.totalfactura = total_factura
+							venta.save()
+							for detalle in detalles:
+								detalle.venta = venta
+								detalle.save()
+							_generar_cuentas_cobrar(venta, total_factura, form.cleaned_data)
+							venta_creada = venta
+
+			if venta_creada:
+				messages.success(request, f'Venta {venta_creada.nrofactura} creada exitosamente con {venta_creada.detalles.count()} items.')
+				return redirect('cxc_detalle_venta', venta_id=venta_creada.id)
 	else:
-		form = VentaForm()
+		form = VentaForm(sale_defaults=sale_defaults)
 		formset = VentaDetalleFormSet()
 	
 	context = {
 		'form': form,
 		'formset': formset,
 		'titulo': 'Crear Nueva Venta',
+		'sale_defaults': sale_defaults,
+		'plazo_catalog': _plazo_catalog(),
+		'product_catalog': _product_catalog(),
+		'timbrado_catalog': _timbrado_catalog(),
 	}
 	return render(request, 'cxc/venta_form.html', context)
 
@@ -213,10 +417,12 @@ def editar_venta(request, venta_id):
 		formset = VentaDetalleFormSet(request.POST, instance=venta)
 		
 		if form.is_valid() and formset.is_valid():
-			venta = form.save()
-			formset.save()
-			messages.success(request, f'Venta {venta.nrofactura} actualizada exitosamente.')
-			return redirect('cxc_detalle_venta', venta_id=venta.id)
+			with transaction.atomic():
+				venta = form.save(commit=False)
+				venta.save()
+				formset.save()
+				messages.success(request, f'Venta {venta.nrofactura} actualizada exitosamente.')
+				return redirect('cxc_detalle_venta', venta_id=venta.id)
 	else:
 		form = VentaForm(instance=venta)
 		formset = VentaDetalleFormSet(instance=venta)
@@ -226,6 +432,9 @@ def editar_venta(request, venta_id):
 		'formset': formset,
 		'venta': venta,
 		'titulo': f'Editar Venta {venta.nrofactura}',
+		'plazo_catalog': _plazo_catalog(),
+		'product_catalog': _product_catalog(),
+		'timbrado_catalog': _timbrado_catalog(),
 	}
 	return render(request, 'cxc/venta_form.html', context)
 

@@ -17,14 +17,18 @@ class Moneda(models.Model):
 class Cliente(models.Model):
 	nombre = models.CharField(max_length=200)
 	apellido = models.CharField(max_length=200, blank=True)
-	documento = models.CharField(max_length=20, blank=True)
+	documento = models.CharField(max_length=20, blank=True, db_column='ruc')
 	direccion = models.CharField(max_length=200, blank=True)
 	email = models.CharField(max_length=200, blank=True)
 	telefono = models.CharField(max_length=200, blank=True)
 	activo = models.BooleanField(default=True)
 
 	class Meta:
-		db_table = 'CLIENTES'
+		# Usar la misma tabla que la app `clientes` para reutilizar los registros existentes.
+		# Este modelo actúa como un alias hacia esa tabla y no será gestionado
+		# por las migraciones de Django para evitar conflictos de esquema.
+		db_table = 'clientes_cliente'
+		managed = False
 
 	def __str__(self):
 		full_name = f"{self.nombre} {self.apellido}".strip()
@@ -56,6 +60,30 @@ class TipoDocumento(models.Model):
 		return self.abreviatura
 
 
+class Timbrado(models.Model):
+	ESTADO_VIGENTE = 'vigente'
+	ESTADO_VENCIDO = 'vencido'
+	ESTADO_ANULADO = 'anulado'
+	ESTADO_CHOICES = [
+		(ESTADO_VIGENTE, 'Vigente'),
+		(ESTADO_VENCIDO, 'Vencido'),
+		(ESTADO_ANULADO, 'Anulado'),
+	]
+
+	numero = models.CharField(max_length=20)
+	serie = models.CharField(max_length=20)
+	nro_inicio = models.PositiveIntegerField(default=1)
+	nro_fin = models.PositiveIntegerField(default=1)
+	fecha_vencimiento = models.DateField()
+	estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default=ESTADO_VIGENTE)
+
+	class Meta:
+		db_table = 'TIMBRADOS'
+
+	def __str__(self):
+		return f'{self.numero} - {self.serie} ({self.nro_inicio}-{self.nro_fin})'
+
+
 class Plazo(models.Model):
 	plazo = models.CharField(max_length=100)
 	tipo_documento = models.ForeignKey(TipoDocumento, on_delete=models.PROTECT, db_column='tipoid')
@@ -73,6 +101,7 @@ class Venta(models.Model):
 	fechaproce = models.DateTimeField()
 	fechafactura = models.DateField()
 	cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, db_column='clienteid')
+	timbrado_registro = models.ForeignKey(Timbrado, on_delete=models.PROTECT, null=True, blank=True, db_column='timbradoid')
 	serie = models.CharField(max_length=10)
 	nrofactura = models.PositiveIntegerField()
 	timbrado = models.CharField(max_length=20, blank=True)
@@ -126,6 +155,7 @@ class Empresa(models.Model):
 class Producto(models.Model):
 	producto = models.CharField(max_length=200)
 	iva = models.DecimalField(max_digits=5, decimal_places=2)
+	precio_venta = models.DecimalField(max_digits=18, decimal_places=5, default=0)
 	servicio = models.BooleanField(default=False)
 
 	class Meta:

@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from cxc.models import Cliente, CuentaCobrar, Deposito, Moneda, Plazo, TipoDocumento, Venta
+from cxc.models import Cliente, CuentaCobrar, Deposito, Moneda, Plazo, Producto, ProductoDetalle, Timbrado, TipoDocumento, Venta
 
 
 class Command(BaseCommand):
@@ -13,31 +13,55 @@ class Command(BaseCommand):
         CuentaCobrar.objects.all().delete()
         Venta.objects.all().delete()
         Plazo.objects.all().delete()
+        Timbrado.objects.all().delete()
         TipoDocumento.objects.all().delete()
-        Cliente.objects.all().delete()
+        ProductoDetalle.objects.all().delete()
+        Producto.objects.all().delete()
         Deposito.objects.all().delete()
         Moneda.objects.all().delete()
 
+        hoy = date.today()
         moneda = Moneda.objects.create(moneda='Guarani', abreviatura='Gs', decimales=0, activo=True)
         deposito = Deposito.objects.create(deposito='Casa Central', direccion='Asuncion', telefono='0000')
         tipo = TipoDocumento.objects.create(tipo='Factura', abreviatura='FAC', tipoid=1, activo=True)
+        timbrado = Timbrado.objects.create(
+            numero='12345678',
+            serie='001-001',
+            nro_inicio=44685,
+            nro_fin=44699,
+            fecha_vencimiento=hoy + timedelta(days=365),
+            estado=Timbrado.ESTADO_VIGENTE,
+        )
 
         plazo_co = Plazo.objects.create(plazo='CO', tipo_documento=tipo, cuotas=1, irregular=False)
         plazo_cr_regular = Plazo.objects.create(plazo='CR-30-60-90 dias', tipo_documento=tipo, cuotas=3, irregular=False)
         plazo_cr_irregular = Plazo.objects.create(plazo='CR-30-45-60 dias', tipo_documento=tipo, cuotas=3, irregular=True)
 
-        c1 = Cliente.objects.create(nombre='Cliente Ejemplo', apellido='S.A.', documento='80011111-1', activo=True)
-        c2 = Cliente.objects.create(nombre='Gregorio', apellido='Quintana Gonzalez', documento='80022222-2', activo=True)
+        producto_10 = Producto.objects.create(producto='Producto Gravado 10%', iva=10, precio_venta=110000, servicio=False)
+        producto_5 = Producto.objects.create(producto='Producto Gravado 5%', iva=5, precio_venta=52500, servicio=False)
+        producto_exento = Producto.objects.create(producto='Producto Exento', iva=0, precio_venta=25000, servicio=False)
 
-        hoy = date.today()
+        ProductoDetalle.objects.create(codbarra='P10-001', producto=producto_10, colorid=None, tamanoid=None, disenoid=None, uxb=None)
+        ProductoDetalle.objects.create(codbarra='P05-001', producto=producto_5, colorid=None, tamanoid=None, disenoid=None, uxb=None)
+        ProductoDetalle.objects.create(codbarra='PEX-001', producto=producto_exento, colorid=None, tamanoid=None, disenoid=None, uxb=None)
+
+        c1, _ = Cliente.objects.get_or_create(
+            documento='80011111-1',
+            defaults={'nombre': 'Cliente Ejemplo', 'apellido': 'S.A.', 'activo': True},
+        )
+        c2, _ = Cliente.objects.get_or_create(
+            documento='80022222-2',
+            defaults={'nombre': 'Gregorio', 'apellido': 'Quintana Gonzalez', 'activo': True},
+        )
 
         v1 = Venta.objects.create(
             fechaproce=timezone.now(),
             fechafactura=hoy - timedelta(days=5),
             cliente=c1,
+            timbrado_registro=timbrado,
             serie='001-001',
             nrofactura=44686,
-            timbrado='12345678',
+            timbrado=timbrado.numero,
             totalfactura=120000,
             deposito=deposito,
             moneda=moneda,
@@ -50,9 +74,10 @@ class Command(BaseCommand):
             fechaproce=timezone.now(),
             fechafactura=hoy,
             cliente=c1,
+            timbrado_registro=timbrado,
             serie='001-001',
             nrofactura=44685,
-            timbrado='12345678',
+            timbrado=timbrado.numero,
             totalfactura=600000,
             deposito=deposito,
             moneda=moneda,
@@ -67,9 +92,10 @@ class Command(BaseCommand):
             fechaproce=timezone.now(),
             fechafactura=hoy - timedelta(days=10),
             cliente=c2,
+            timbrado_registro=timbrado,
             serie='001-001',
             nrofactura=44687,
-            timbrado='12345678',
+            timbrado=timbrado.numero,
             totalfactura=584226,
             deposito=deposito,
             moneda=moneda,
@@ -84,9 +110,10 @@ class Command(BaseCommand):
             fechaproce=timezone.now(),
             fechafactura=hoy - timedelta(days=40),
             cliente=c2,
+            timbrado_registro=timbrado,
             serie='001-001',
             nrofactura=44688,
-            timbrado='12345678',
+            timbrado=timbrado.numero,
             totalfactura=300000,
             deposito=deposito,
             moneda=moneda,
