@@ -37,9 +37,9 @@ class Command(BaseCommand):
         plazo_cr_regular = Plazo.objects.create(plazo='CR-30-60-90 dias', tipo_documento=tipo, cuotas=3, irregular=False)
         plazo_cr_irregular = Plazo.objects.create(plazo='CR-30-45-60 dias', tipo_documento=tipo, cuotas=3, irregular=True)
 
-        producto_10 = Producto.objects.create(producto='Producto Gravado 10%', iva=10, precio_venta=110000, servicio=False)
-        producto_5 = Producto.objects.create(producto='Producto Gravado 5%', iva=5, precio_venta=52500, servicio=False)
-        producto_exento = Producto.objects.create(producto='Producto Exento', iva=0, precio_venta=25000, servicio=False)
+        producto_10 = Producto.objects.create(producto='Producto A', iva=10, precio_venta=5000000, servicio=False)
+        producto_5 = Producto.objects.create(producto='Producto B', iva=5, precio_venta=2500000, servicio=False)
+        producto_exento = Producto.objects.create(producto='Producto C', iva=0, precio_venta=1000000, servicio=False)
 
         ProductoDetalle.objects.create(codbarra='P10-001', producto=producto_10, colorid=None, tamanoid=None, disenoid=None, uxb=None)
         ProductoDetalle.objects.create(codbarra='P05-001', producto=producto_5, colorid=None, tamanoid=None, disenoid=None, uxb=None)

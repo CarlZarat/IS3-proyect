@@ -1,6 +1,7 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from django import forms
+from django.core.exceptions import ValidationError
 from django.forms import inlineformset_factory
 
 from .models import Cliente, Moneda, Plazo, Producto, ProductoDetalle, Timbrado, TipoDocumento, Venta, VentaDetalle
@@ -134,6 +135,9 @@ class VentaForm(forms.ModelForm):
         self.fields['timbrado_vence'].disabled = True
         self.fields['timbrado_registro'].disabled = False
 
+        for field_name in ['totalexentas', 'totalimponible', 'totalfactura']:
+            self.fields[field_name].required = False
+
         for field_name in ['cliente', 'plazo', 'moneda', 'tipo_documento']:
             self.fields[field_name].widget.attrs.setdefault('data-searchable', 'true')
 
@@ -216,7 +220,7 @@ class VentaDetalleForm(forms.ModelForm):
             subtotal = cleaned_data['precio'] * cantidad
             iva = Decimal(str(producto.iva or 0))
             if iva == Decimal('10'):
-                cleaned_data['impuesto10'] = subtotal - (subtotal / Decimal('1.10'))
+                cleaned_data['impuesto10'] = (subtotal * Decimal('0.10')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
             elif iva == Decimal('5'):
                 cleaned_data['impuesto10'] = Decimal('0')
             else:
@@ -227,10 +231,27 @@ class VentaDetalleForm(forms.ModelForm):
         return cleaned_data
 
 
+class BaseVentaDetalleFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+        producto_ids = []
+        for form in self.forms:
+            if form.cleaned_data and not form.cleaned_data.get('DELETE'):
+                prod = form.cleaned_data.get('producto_detalle')
+                if prod:
+                    if prod.pk in producto_ids:
+                        raise ValidationError(
+                            f'El producto "{prod}" está repetido. Cada producto solo puede aparecer una vez por venta.'
+                        )
+                    producto_ids.append(prod.pk)
+
+
 VentaDetalleFormSet = inlineformset_factory(
     Venta,
     VentaDetalle,
     form=VentaDetalleForm,
+    formset=BaseVentaDetalleFormSet,
     extra=1,
     min_num=0,
     validate_min=False,

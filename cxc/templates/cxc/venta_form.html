@@ -33,7 +33,6 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold" for="id_cliente">Cliente</label>
-                            <input type="search" id="cliente-search" class="form-control mb-2" placeholder="Buscar cliente...">
                             {{ form.cliente }}
                             {% if form.cliente.errors %}<small class="text-danger d-block mt-1">{{ form.cliente.errors }}</small>{% endif %}
                         </div>
@@ -167,7 +166,6 @@
                                 {% for row_form in formset.forms %}
                                     <tr class="form-row sales-item-row">
                                         <td>
-                                            <input type="search" class="form-control mb-2 product-search" placeholder="Buscar producto...">
                                             {{ row_form.producto_detalle }}
                                             {% if row_form.producto_detalle.errors %}<small class="text-danger d-block mt-1">{{ row_form.producto_detalle.errors }}</small>{% endif %}
                                         </td>
@@ -195,7 +193,6 @@
                     <template id="empty-form-template">
                         <tr class="form-row sales-item-row">
                             <td>
-                                <input type="search" class="form-control mb-2 product-search" placeholder="Buscar producto...">
                                 {{ formset.empty_form.producto_detalle }}
                             </td>
                             <td>{{ formset.empty_form.precio }}</td>
@@ -318,6 +315,8 @@
     .credit-section .form-check-input {
         margin-top: 0.2rem;
     }
+
+
 </style>
 
 <script>
@@ -332,8 +331,6 @@
     const regularDaysGroup = document.getElementById('regular-days-group');
     const irregularDaysGroup = document.getElementById('irregular-days-group');
     const cuotaPreviewBody = document.getElementById('quota-preview-body');
-    const clientSearch = document.getElementById('cliente-search');
-    const clienteSelect = document.getElementById('id_cliente');
     const addItemBtn = document.getElementById('add-item-btn');
     const tbody = document.getElementById('items-tbody');
     const emptyTemplate = document.getElementById('empty-form-template');
@@ -344,9 +341,9 @@
         return plazoCatalog.find((item) => String(item.id) === String(plazoId));
     }
 
-    function parseNumber(value) {
-        const parsed = parseFloat(value);
-        return Number.isFinite(parsed) ? parsed : 0;
+    function intVal(value) {
+        const v = parseInt(value, 10);
+        return Number.isFinite(v) ? v : 0;
     }
 
     function formatDate(date) {
@@ -359,132 +356,114 @@
         return date;
     }
 
-    function filterSelectOptions(select, query) {
-        const normalized = query.trim().toLowerCase();
-        Array.from(select.options).forEach((option) => {
-            if (!option.value) {
-                option.hidden = false;
-                return;
-            }
-            const visible = option.text.toLowerCase().includes(normalized);
-            option.hidden = !visible;
-        });
-    }
-
-    function updateClientSearch() {
-        if (clientSearch && clienteSelect) {
-            clientSearch.addEventListener('input', function () {
-                filterSelectOptions(clienteSelect, this.value);
-            });
-        }
-    }
-
+    /* ---------- CALCULOS ---------- */
     function recalcRow(row) {
-        const precioField = row.querySelector('input[id$="-precio"]');
-        const cantidadField = row.querySelector('input[id$="-cantidad"]');
-        const impuesto10Field = row.querySelector('input[id$="-impuesto10"]');
-        const totalField = row.querySelector('input[id$="-total"]');
-        const productoField = row.querySelector('select[id$="-producto_detalle"]');
-        const productSearchField = row.querySelector('.product-search');
+        var precioField = row.querySelector('input[id$="-precio"]');
+        var cantidadField = row.querySelector('input[id$="-cantidad"]');
+        var impuesto10Field = row.querySelector('input[id$="-impuesto10"]');
+        var totalField = row.querySelector('input[id$="-total"]');
+        var select = row.querySelector('select[id$="-producto_detalle"]');
 
-        const selectedProduct = productCatalog.find((item) => String(item.id) === String(productoField?.value));
+        var selectedProduct = null;
+        if (select && select.value) {
+            selectedProduct = productCatalog.find(function (item) { return String(item.id) === String(select.value); });
+        }
+
         if (selectedProduct) {
             if (precioField) {
-                precioField.value = Number(selectedProduct.precio || 0).toFixed(5);
-            }
-            if (productSearchField) {
-                productSearchField.value = selectedProduct.label;
+                precioField.value = Math.round(Number(selectedProduct.precio || 0));
             }
         }
 
-        const precio = parseNumber(precioField?.value);
-        const cantidad = parseNumber(cantidadField?.value) || 1;
-        const subtotal = precio * cantidad;
-        let impuesto10 = 0;
+        var precio = intVal(precioField ? precioField.value : 0);
+        var cantidad = intVal(cantidadField ? cantidadField.value : 0) || 1;
+        var subtotal = precio * cantidad;
+        var impuesto10 = 0;
 
-        if (selectedProduct && parseNumber(selectedProduct.iva) === 10) {
-            impuesto10 = subtotal - (subtotal / 1.10);
+        if (selectedProduct && intVal(selectedProduct.iva) === 10) {
+            impuesto10 = Math.round(subtotal * 0.10);
         }
 
-        if (impuesto10Field) impuesto10Field.value = impuesto10.toFixed(5);
-        if (totalField) totalField.value = subtotal.toFixed(5);
+        if (impuesto10Field) impuesto10Field.value = impuesto10;
+        if (totalField) totalField.value = subtotal;
     }
 
     function updateTotals() {
-        let exentas = 0;
-        let imponible = 0;
-        let total = 0;
+        var exentas = 0;
+        var imponible = 0;
+        var total = 0;
 
-        tbody.querySelectorAll('.sales-item-row').forEach((row) => {
-            const deleted = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
-            if (deleted && deleted.checked) {
-                return;
+        tbody.querySelectorAll('.sales-item-row').forEach(function (row) {
+            var deleted = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (deleted && deleted.checked) return;
+
+            var precioField = row.querySelector('input[id$="-precio"]');
+            var cantidadField = row.querySelector('input[id$="-cantidad"]');
+            var subtotal = intVal(precioField ? precioField.value : 0) * (intVal(cantidadField ? cantidadField.value : 0) || 1);
+            var select = row.querySelector('select[id$="-producto_detalle"]');
+            var selectedProduct = null;
+            if (select && select.value) {
+                selectedProduct = productCatalog.find(function (item) { return String(item.id) === String(select.value); });
             }
-            const precioField = row.querySelector('input[id$="-precio"]');
-            const cantidadField = row.querySelector('input[id$="-cantidad"]');
-            const subtotal = parseNumber(precioField?.value) * (parseNumber(cantidadField?.value) || 1);
-            const productoField = row.querySelector('select[id$="-producto_detalle"]');
-            const selectedProduct = productCatalog.find((item) => String(item.id) === String(productoField?.value));
 
             total += subtotal;
-            if (!selectedProduct || parseNumber(selectedProduct.iva) === 0) {
+            if (selectedProduct && intVal(selectedProduct.iva) === 0) {
                 exentas += subtotal;
             } else {
-                const taxRate = parseNumber(selectedProduct.iva);
-                imponible += taxRate === 5 ? subtotal / 1.05 : subtotal / 1.10;
+                imponible += subtotal;
             }
         });
 
-        document.getElementById('id_totalexentas').value = Math.round(exentas);
-        document.getElementById('id_totalimponible').value = Math.round(imponible);
-        document.getElementById('id_totalfactura').value = Math.round(total);
+        document.getElementById('id_totalexentas').value = exentas;
+        document.getElementById('id_totalimponible').value = imponible;
+        document.getElementById('id_totalfactura').value = total;
     }
 
     function renderQuotaPreview() {
-        const plazo = getPlazoData();
-        const tipoField = document.querySelector('input[name="tipo_vencimiento"]:checked');
-        const cantidadField = document.getElementById('id_cantidad_cuotas');
-        const regularDaysField = document.getElementById('id_dias_entre_cuotas');
-        const irregularDaysField = document.getElementById('id_dias_irregulares');
-        const totalFactura = parseNumber(document.getElementById('id_totalfactura').value);
-        const fechaValue = fechaFactura && fechaFactura.value ? new Date(fechaFactura.value + 'T00:00:00') : null;
+        var plazo = getPlazoData();
+        var tipoField = document.querySelector('input[name="tipo_vencimiento"]:checked');
+        var cantidadField = document.getElementById('id_cantidad_cuotas');
+        var regularDaysField = document.getElementById('id_dias_entre_cuotas');
+        var irregularDaysField = document.getElementById('id_dias_irregulares');
+        var totalFactura = intVal(document.getElementById('id_totalfactura').value);
+        var fechaValue = fechaFactura && fechaFactura.value ? new Date(fechaFactura.value + 'T00:00:00') : null;
 
         if (!plazo || String(plazo.label).toUpperCase() === 'CO') {
             creditSection.classList.add('d-none');
-            cuotaPreviewBody.innerHTML = '<tr><td colspan="4" class="text-secondary">Seleccione un plazo de crédito para generar la vista previa.</td></tr>';
+            cuotaPreviewBody.innerHTML = '<tr><td colspan="4" class="text-secondary">Seleccione un plazo de cr\u00e9dito para generar la vista previa.</td></tr>';
             return;
         }
 
         creditSection.classList.remove('d-none');
-        const tipo = tipoField ? tipoField.value : (plazo.irregular ? 'irregular' : 'regular');
-        const cantidad = Math.max(parseInt(cantidadField?.value || plazo.cuotas || 1, 10), 1);
-        const daysValue = tipo === 'irregular'
-            ? (irregularDaysField?.value || '')
-            : parseInt(regularDaysField?.value || 30, 10);
+        var tipo = tipoField ? tipoField.value : (plazo.irregular ? 'irregular' : 'regular');
+        var cantidad = Math.max(parseInt(cantidadField ? cantidadField.value : plazo.cuotas || 1, 10), 1);
+        var daysValue = tipo === 'irregular'
+            ? (irregularDaysField ? irregularDaysField.value : '')
+            : parseInt(regularDaysField ? regularDaysField.value : 30, 10);
 
         regularDaysGroup.classList.toggle('d-none', tipo === 'irregular');
         irregularDaysGroup.classList.toggle('d-none', tipo !== 'irregular');
 
-        const base = Math.floor(totalFactura / cantidad);
-        const remainder = totalFactura % cantidad;
-        const rows = [];
+        var base = Math.floor(totalFactura / cantidad);
+        var remainder = totalFactura % cantidad;
+        var rows = [];
 
         if (fechaValue) {
             if (tipo === 'irregular') {
-                const dayList = String(daysValue).split(',').map((item) => parseInt(item.trim(), 10)).filter((item) => Number.isFinite(item));
+                var dayList = String(daysValue).split(',').map(function (item) { return parseInt(item.trim(), 10); }).filter(function (item) { return Number.isFinite(item); });
                 if (dayList.length === cantidad) {
-                    dayList.forEach((days, index) => {
-                        const amount = base + (index < remainder ? 1 : 0);
-                        rows.push(`<tr><td>${index + 1}/${cantidad}</td><td>${amount}</td><td>${formatDate(addDays(fechaValue, days))}</td><td>0</td></tr>`);
+                    dayList.forEach(function (days, index) {
+                        var amount = base + (index < remainder ? 1 : 0);
+                        rows.push('<tr><td>' + (index + 1) + '/' + cantidad + '</td><td>' + amount + '</td><td>' + formatDate(addDays(fechaValue, days)) + '</td><td>0</td></tr>');
                     });
                 } else {
-                    rows.push('<tr><td colspan="4" class="text-secondary">Complete los días de cada cuota para ver la vista previa.</td></tr>');
+                    rows.push('<tr><td colspan="4" class="text-secondary">Complete los d\u00edas de cada cuota para ver la vista previa.</td></tr>');
                 }
             } else {
-                const interval = parseInt(daysValue || 30, 10);
-                for (let index = 0; index < cantidad; index += 1) {
-                    const amount = base + (index < remainder ? 1 : 0);
-                    rows.push(`<tr><td>${index + 1}/${cantidad}</td><td>${amount}</td><td>${formatDate(addDays(fechaValue, interval * (index + 1)))}</td><td>0</td></tr>`);
+                var interval = parseInt(daysValue || 30, 10);
+                for (var idx = 0; idx < cantidad; idx++) {
+                    var amount = base + (idx < remainder ? 1 : 0);
+                    rows.push('<tr><td>' + (idx + 1) + '/' + cantidad + '</td><td>' + amount + '</td><td>' + formatDate(addDays(fechaValue, interval * (idx + 1))) + '</td><td>0</td></tr>');
                 }
             }
         }
@@ -493,11 +472,9 @@
     }
 
     function syncCreditDefaults() {
-        const plazo = getPlazoData();
-        const tipoRadios = document.querySelectorAll('input[name="tipo_vencimiento"]');
-        if (!plazo) {
-            return;
-        }
+        var plazo = getPlazoData();
+        var tipoRadios = document.querySelectorAll('input[name="tipo_vencimiento"]');
+        if (!plazo) return;
 
         if (String(plazo.label).toUpperCase() === 'CO') {
             creditSection.classList.add('d-none');
@@ -505,12 +482,12 @@
         }
 
         creditSection.classList.remove('d-none');
-        const expected = plazo.irregular ? 'irregular' : 'regular';
-        tipoRadios.forEach((radio) => {
+        var expected = plazo.irregular ? 'irregular' : 'regular';
+        tipoRadios.forEach(function (radio) {
             radio.checked = radio.value === expected;
         });
 
-        const cantidadField = document.getElementById('id_cantidad_cuotas');
+        var cantidadField = document.getElementById('id_cantidad_cuotas');
         if (cantidadField && !parseInt(cantidadField.value || '0', 10)) {
             cantidadField.value = plazo.cuotas || 1;
         }
@@ -519,26 +496,22 @@
     }
 
     function syncTimbradoDefaults() {
-        if (!timbradoSelect) {
-            return;
-        }
+        if (!timbradoSelect) return;
 
-        const timbrado = timbradoCatalog.find((item) => String(item.id) === String(timbradoSelect.value)) || timbradoCatalog[0];
-        if (!timbrado) {
-            return;
-        }
+        var timbrado = timbradoCatalog.find(function (item) { return String(item.id) === String(timbradoSelect.value); }) || timbradoCatalog[0];
+        if (!timbrado) return;
 
-        const serieField = document.getElementById('id_serie');
-        const timbradoField = document.getElementById('id_timbrado');
-        const venceField = document.getElementById('id_timbrado_vence');
+        var serieField = document.getElementById('id_serie');
+        var timbradoField = document.getElementById('id_timbrado');
+        var venceField = document.getElementById('id_timbrado_vence');
         if (serieField) serieField.value = timbrado.serie;
         if (timbradoField) timbradoField.value = timbrado.numero;
         if (venceField) venceField.value = timbrado.fecha_vencimiento;
     }
 
     function wireRow(row) {
-        const inputs = row.querySelectorAll('input, select');
-        inputs.forEach((input) => {
+        var inputs = row.querySelectorAll('input, select');
+        inputs.forEach(function (input) {
             input.addEventListener('change', function () {
                 recalcRow(row);
                 updateTotals();
@@ -551,8 +524,8 @@
             });
         });
 
-        const removeButton = row.querySelector('.remove-item-btn');
-        const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        var removeButton = row.querySelector('.remove-item-btn');
+        var deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
         if (removeButton && deleteCheckbox) {
             removeButton.addEventListener('click', function () {
                 deleteCheckbox.checked = true;
@@ -560,55 +533,35 @@
                 updateTotals();
             });
         }
-
-        const productSearchField = row.querySelector('.product-search');
-        const productoSelect = row.querySelector('select[id$="-producto_detalle"]');
-        if (productSearchField && productoSelect) {
-            productSearchField.addEventListener('input', function () {
-                const normalized = this.value.trim().toLowerCase();
-                Array.from(productoSelect.options).forEach((option) => {
-                    if (!option.value) {
-                        option.hidden = false;
-                        return;
-                    }
-                    option.hidden = !option.text.toLowerCase().includes(normalized);
-                });
-            });
-        }
     }
 
     function addItemRow() {
-        const formIndex = parseInt(totalFormsInput.value, 10);
-        const html = emptyTemplate.innerHTML.replaceAll('__prefix__', formIndex);
+        var formIndex = parseInt(totalFormsInput.value, 10);
+        var html = emptyTemplate.innerHTML.replaceAll('__prefix__', formIndex);
 
-        const wrapper = document.createElement('tbody');
+        var wrapper = document.createElement('tbody');
         wrapper.innerHTML = html;
-        const newRow = wrapper.firstElementChild;
+        var newRow = wrapper.firstElementChild;
         tbody.appendChild(newRow);
-        const quantityField = newRow.querySelector('input[id$="-cantidad"]');
-        if (quantityField) {
-            quantityField.value = 1;
-        }
+        var quantityField = newRow.querySelector('input[id$="-cantidad"]');
+        if (quantityField) quantityField.value = 1;
         totalFormsInput.value = formIndex + 1;
         wireRow(newRow);
         recalcRow(newRow);
         updateTotals();
     }
 
-    document.querySelectorAll('.sales-item-row').forEach((row) => {
+    document.querySelectorAll('.sales-item-row').forEach(function (row) {
         wireRow(row);
         recalcRow(row);
     });
 
-    updateClientSearch();
     updateTotals();
     syncCreditDefaults();
     syncTimbradoDefaults();
 
     if (plazoSelect) {
-        plazoSelect.addEventListener('change', function () {
-            syncCreditDefaults();
-        });
+        plazoSelect.addEventListener('change', syncCreditDefaults);
     }
 
     if (timbradoSelect) {
@@ -619,7 +572,7 @@
         fechaFactura.addEventListener('change', renderQuotaPreview);
     }
 
-    document.querySelectorAll('input[name="tipo_vencimiento"], #id_cantidad_cuotas, #id_dias_entre_cuotas, #id_dias_irregulares').forEach((input) => {
+    document.querySelectorAll('input[name="tipo_vencimiento"], #id_cantidad_cuotas, #id_dias_entre_cuotas, #id_dias_irregulares').forEach(function (input) {
         input.addEventListener('input', renderQuotaPreview);
         input.addEventListener('change', renderQuotaPreview);
     });

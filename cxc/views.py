@@ -89,22 +89,19 @@ def _calcular_detalle(form):
 	total = (precio * cantidad).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
 
 	if iva == Decimal('5'):
-		base = (total / Decimal('1.05')).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
-		impuesto5 = (total - base).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
+		impuesto5 = (total * Decimal('0.05')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
 		impuesto10 = Decimal('0')
 		total_exentas = 0
-		total_imponible = int(base.to_integral_value(rounding=ROUND_HALF_UP))
+		total_imponible = int(total)
 	elif iva == Decimal('10'):
-		base = (total / Decimal('1.10')).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
 		impuesto5 = Decimal('0')
-		impuesto10 = (total - base).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)
+		impuesto10 = (total * Decimal('0.10')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
 		total_exentas = 0
-		total_imponible = int(base.to_integral_value(rounding=ROUND_HALF_UP))
+		total_imponible = int(total)
 	else:
-		base = total
 		impuesto5 = Decimal('0')
 		impuesto10 = Decimal('0')
-		total_exentas = int(total.to_integral_value(rounding=ROUND_HALF_UP))
+		total_exentas = int(total)
 		total_imponible = 0
 
 	detalle.iva = iva
